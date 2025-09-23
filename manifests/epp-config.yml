@@ -1,0 +1,169 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: llm-d-scale-epp
+data:
+  default.yaml: |
+    apiVersion: inference.networking.x-k8s.io/v1alpha1
+    kind: EndpointPickerConfig
+    plugins:
+    - type: prefix-cache-scorer
+    - type: decode-filter
+    - type: max-score-picker
+    - type: single-profile-handler
+    schedulingProfiles:
+    - name: default
+      plugins:
+      - pluginRef: decode-filter
+      - pluginRef: max-score-picker
+      - pluginRef: prefix-cache-scorer
+        weight: 2
+  default-plugins.yaml: |
+    apiVersion: inference.networking.x-k8s.io/v1alpha1
+    kind: EndpointPickerConfig
+    plugins:
+    - type: low-queue-filter
+      parameters:
+        threshold: 128
+    - type: lora-affinity-filter
+      parameters:
+        threshold: 0.999
+    - type: least-queue-filter
+    - type: least-kv-cache-filter
+    - type: decision-tree-filter
+      name: low-latency-filter
+      parameters:
+        current:
+          pluginRef: low-queue-filter
+        nextOnSuccess:
+          decisionTree:
+            current:
+              pluginRef: lora-affinity-filter
+            nextOnSuccessOrFailure:
+              decisionTree:
+                current:
+                  pluginRef: least-queue-filter
+                nextOnSuccessOrFailure:
+                  decisionTree:
+                    current:
+                      pluginRef: least-kv-cache-filter
+        nextOnFailure:
+          decisionTree:
+            current:
+              pluginRef: least-queue-filter
+            nextOnSuccessOrFailure:
+              decisionTree:
+                current:
+                  pluginRef: lora-affinity-filter
+                nextOnSuccessOrFailure:
+                  decisionTree:
+                    current:
+                      pluginRef: least-kv-cache-filter
+    - type: random-picker
+      parameters:
+        maxNumOfEndpoints: 1
+    - type: single-profile-handler
+    schedulingProfiles:
+    - name: default
+      plugins:
+      - pluginRef: low-latency-filter
+      - pluginRef: random-picker
+  plugins-v2.yaml: |
+    apiVersion: inference.networking.x-k8s.io/v1alpha1
+    kind: EndpointPickerConfig
+    plugins:
+    - type: queue-scorer
+    - type: kv-cache-scorer
+    - type: prefix-cache-scorer
+      parameters:
+        hashBlockSize: 64
+        maxPrefixBlocksToMatch: 256
+        lruCapacityPerServer: 31250
+    - type: max-score-picker
+      parameters:
+        maxNumOfEndpoints: 1
+    - type: single-profile-handler
+    schedulingProfiles:
+    - name: default
+      plugins:
+      - pluginRef: queue-scorer
+        weight: 1
+      - pluginRef: kv-cache-scorer
+        weight: 1
+      - pluginRef: prefix-cache-scorer
+        weight: 1
+      - pluginRef: max-score-picker
+  prefix-cache-tracking-config.yaml: |
+    apiVersion: inference.networking.x-k8s.io/v1alpha1
+    kind: EndpointPickerConfig
+    plugins:
+      - type: single-profile-handler
+      - type: prefix-cache-scorer
+        parameters:
+          mode: cache_tracking
+          indexerConfig:
+            tokenProcessorConfig:
+              blockSize: 64                         # must match vLLM block size if not default (16)
+              hashSeed: "42"                        # must match PYTHONHASHSEED in vLLM pods
+            kvBlockIndexConfig:
+              enableMetrics: true                   # enable kv-block index metrics (prometheus)
+              metricsLoggingInterval: 60000000000   # log kv-block metrics as well (1m in nanoseconds)
+      - type: kv-cache-scorer # kv-cache-utilization
+      - type: queue-scorer
+      - type: max-score-picker
+    schedulingProfiles:
+      - name: default
+        plugins:
+          - pluginRef: prefix-cache-scorer
+            weight: 2.0
+          - pluginRef: kv-cache-scorer
+            weight: 1.0
+          - pluginRef: queue-scorer
+            weight: 1.0
+          - pluginRef: max-score-picker
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: llm-d-scale-epp
+rules:
+- apiGroups: ["inference.networking.k8s.io"]
+  resources: ["inferencepools", "inferenceobjectives"]
+  verbs: ["get", "watch", "list"]
+- apiGroups: ["inference.networking.x-k8s.io"]
+  resources: ["inferenceobjectives", "inferencemodels", "inferencepools"]
+  verbs: ["get", "watch", "list"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "watch", "list"]
+- apiGroups:
+  - authentication.k8s.io
+  resources:
+  - tokenreviews
+  verbs:
+  - create
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - subjectaccessreviews
+  verbs:
+  - create
+---
+# Source: inferencepool/templates/rbac.yaml
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: llm-d-scale-epp
+subjects:
+- kind: ServiceAccount
+  name: llm-d-scale-epp
+  namespace: llm-d-scale
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: llm-d-scale-epp
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: llm-d-scale-epp

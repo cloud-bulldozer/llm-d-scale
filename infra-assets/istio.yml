@@ -1,0 +1,31 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    kubernetes.io/metadata.name: istio-system
+  name: istio-system
+---
+kind: Istio
+apiVersion: sailoperator.io/v1
+metadata:
+  name: default
+spec:
+  namespace: istio-system
+  values:
+    pilot:
+      env:
+        ENABLE_GATEWAY_API_INFERENCE_EXTENSION: 'true' # Required in the HTTPRoute: InferencePool is not enabled. To enable, set ENABLE_GATEWAY_API_INFERENCE_EXTENSION to true in istiod
+  updateStrategy:
+    inactiveRevisionDeletionGracePeriodSeconds: 30
+    type: InPlace
+  version: v1.26.3
+---
+kind: IstioCNI
+apiVersion: sailoperator.io/v1
+metadata:
+  name: default
+spec:
+  namespace: istio-cni
+  version: v1.26.3
+---

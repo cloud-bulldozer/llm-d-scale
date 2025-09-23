@@ -1,0 +1,19 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: llm-d-scale
+spec:
+  gatewayClassName: "istio"
+  listeners:
+    - port: 80
+      protocol: HTTP
+      name: default
+      path: /
+      allowedRoutes:
+        namespaces:
+          from: All
+  infrastructure:
+    parametersRef:
+      name: llm-d-scale-gateway
+      group: ""
+      kind: ConfigMap

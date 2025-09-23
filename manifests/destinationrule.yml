@@ -1,0 +1,10 @@
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: llm-d-scale-epp
+spec:
+  host: llm-d-scale-epp.llm-d-scale.svc.cluster.local
+  trafficPolicy:
+    tls:
+      insecureSkipVerify: true
+      mode: SIMPLE

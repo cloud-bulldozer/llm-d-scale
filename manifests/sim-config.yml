@@ -1,0 +1,18 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: sim-config
+data:
+  config.yml: |
+    port: 8000
+    model: "Qwen/Qwen3-0.6B"        # The fake model name
+    served-model-name: 
+    mode: random
+    time-to-first-token: 1000
+    inter-token-latency: 10         # latency between tokens, in ms
+    max-num-seqs: 5                 # maximum number of inference requests that could be processed at the same time
+    enable-kvcache: false           # Requires HF_TOKEN to pull the model's tokenizer
+    fake-metrics: 
+      running-requests: 0
+      waiting-requests: 0
+      kv-cache-usage: 0

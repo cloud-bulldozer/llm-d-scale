@@ -1,0 +1,6 @@
+kind: Secret
+apiVersion: v1
+metadata:
+  name: llm-d-hf-token
+data:
+  HF_TOKEN: <HF_TOKEN>

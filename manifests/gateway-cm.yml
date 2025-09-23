@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: llm-d-scale-gateway
+  labels: 
+    app.kubernetes.io/name: llm-d-scale-gateway
+    app.kubernetes.io/gateway: llm-d-scale-gateway
+  annotations:
+data:
+  deployment: |
+    spec:
+      template:
+        spec:
+          containers:
+          - name: istio-proxy
+            args:
+              - proxy
+              - router
+              - --domain
+              - $(POD_NAMESPACE).svc.cluster.local
+              - --proxyLogLevel
+              - info
+              - --proxyComponentLogLevel
+              - misc:info
+              - --log_output_level
+              - default:info
+            resources: 
+              limits:
+                cpu: "2"
+                memory: 1Gi
+              requests:
+                cpu: 100m
+                memory: 128Mi
+  service: |
+    spec:
+      type: "LoadBalancer"    # ClusterIP can be specified instead for non cloud platform deployments
