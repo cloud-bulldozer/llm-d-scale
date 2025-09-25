@@ -33,4 +33,4 @@ data:
                 memory: 128Mi
   service: |
     spec:
-      type: "LoadBalancer"    # ClusterIP can be specified instead for non cloud platform deployments
+      type: "ClusterIP"    # ClusterIP can be specified instead for non cloud platform deployments

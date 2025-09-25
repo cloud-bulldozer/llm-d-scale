@@ -18,8 +18,8 @@ spec:
       terminationGracePeriodSeconds: 130
       containers:
       - name: epp
-        image: ghcr.io/llm-d/llm-d-inference-scheduler:v0.2.1
-        imagePullPolicy: Always
+        image: {{ .image }}
+        imagePullPolicy: IfNotPresent
         args:
         - -poolName
         - llm-d-scale
@@ -34,7 +34,7 @@ spec:
         - -metricsPort
         - "9090"
         - -configFile
-        - "config/default-plugins.yaml"
+        - "{{ .configFile }}"
         # https://pkg.go.dev/flag#hdr-Command_line_flag_syntax; space is only for non-bool flags
         - "--enablePprof=true"
         - "--modelServerMetricsPath=/metrics"
