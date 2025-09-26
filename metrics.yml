@@ -1,0 +1,5 @@
+- query: sum(irate(container_cpu_usage_seconds_total{name!="", namespace="llm-d-scale"}[2m])) by (pod)
+  metricName: cpu-usage
+
+- query: sum(container_memory_working_set_bytes{namespace="llm-d-scale", name!=""}) by (pod)
+  metricName: memory-usage
