@@ -1,0 +1,159 @@
+---
+{{ $model := "Qwen/Qwen3-0.6B" }}
+{{ $samples := 3 }}
+{{ $guidellmImage := "quay.io/rsevilla/guidellm-parser:latest" }}
+{{ $guidellmES :=  env "ES_SERVER" }}
+{{ $guidellmESIndex := "guidellm" }}
+{{ $guidellmParallelism := 1 }}
+
+global:
+  gc: false
+jobs:
+  - name: deploy-infra
+    namespace: llm-d-scale
+    namespacedIterations: false
+    preLoadImages: false
+    cleanup: false
+    verifyObjects: false
+    qps: 5
+    burst: 5
+    objects:
+      - objectTemplate: manifests/gateway.yml
+      - objectTemplate: manifests/gateway-cm.yml
+        inputVars:
+          replicas: 2
+      - objectTemplate: manifests/destinationrule.yml
+      - objectTemplate: manifests/epp-service.yml
+      - objectTemplate: manifests/epp-config.yml
+      - objectTemplate: manifests/epp-sa.yml
+      - objectTemplate: manifests/epp-clusterrole.yml
+      - objectTemplate: manifests/epp-clusterrolebinding.yml        
+      - objectTemplate: manifests/epp-deployment.yml
+        inputVars:
+          configFile: config/default-plugins.yaml
+          image: ghcr.io/llm-d/llm-d-inference-scheduler:v0.2.1
+          replicas: 1
+      - objectTemplate: manifests/inferencepool.yml
+      - objectTemplate: manifests/httproute.yml
+      - objectTemplate: manifests/hf-token.yml
+      - objectTemplate: manifests/sim-config.yml
+        inputVars:
+          model: {{ $model }}
+          maxModelLen: 65536                  # Max lenght of the model, including the input and output tokens
+          ttft: 500
+          itl: 10
+      - objectTemplate: manifests/model-server-sim-deployment.yml
+        inputVars:
+          replicas: 2
+      
+  - name: steady-chat
+    preLoadImages: false
+    qps: 5
+    burst: 5
+    objects:
+      - objectTemplate: manifests/guidellm-job.yml
+        inputVars:
+          parallelism: {{ $guidellmParallelism }}
+          completions: {{ $samples }}
+          env:
+            GUIDELLM_TARGET: "http://llm-d-scale-istio.llm-d-scale.svc.cluster.local"
+            GUIDELLM_MAX_SECONDS: "60"
+            GUIDELLM_RATE_TYPE: constant
+            GUIDELLM_RATE: "10"
+            GUIDELLM_DATA: "prompt_tokens=256,output_tokens=256"
+          image: {{ $guidellmImage }}
+          ES_SERVER: {{ $guidellmES }}
+          ES_INDEX: {{ $guidellmESIndex }}
+
+  - name: steady-text-generation
+    preLoadImages: false
+    qps: 5
+    burst: 5
+    objects:
+      - objectTemplate: manifests/guidellm-job.yml
+        inputVars:
+          parallelism: {{ $guidellmParallelism }}
+          completions: {{ $samples }}
+          env:
+            GUIDELLM_TARGET: "http://llm-d-scale-istio.llm-d-scale.svc.cluster.local"
+            GUIDELLM_MAX_SECONDS: "60"
+            GUIDELLM_RATE_TYPE: constant
+            GUIDELLM_RATE: "10"
+            GUIDELLM_DATA: "prompt_tokens=512,output_tokens=512"
+          image: {{ $guidellmImage }}
+          ES_SERVER: {{ $guidellmES }}
+          ES_INDEX: {{ $guidellmESIndex }}
+
+  - name: steady-rag
+    preLoadImages: false
+    qps: 5
+    burst: 5
+    objects:
+      - objectTemplate: manifests/guidellm-job.yml
+        inputVars:
+          parallelism: {{ $guidellmParallelism }}
+          completions: {{ $samples }}
+          env:
+            GUIDELLM_TARGET: "http://llm-d-scale-istio.llm-d-scale.svc.cluster.local"
+            GUIDELLM_MAX_SECONDS: "60"
+            GUIDELLM_RATE_TYPE: constant
+            GUIDELLM_RATE: "10"
+            GUIDELLM_DATA: "prompt_tokens=8192,output_tokens=512"
+          image: {{ $guidellmImage }}
+          ES_SERVER: {{ $guidellmES }}
+          ES_INDEX: {{ $guidellmESIndex }}
+
+  - name: throughput-chat
+    preLoadImages: false
+    qps: 5
+    burst: 5
+    objects:
+      - objectTemplate: manifests/guidellm-job.yml
+        inputVars:
+          parallelism: {{ $guidellmParallelism }}
+          completions: {{ $samples }}
+          env:
+            GUIDELLM_TARGET: "http://llm-d-scale-istio.llm-d-scale.svc.cluster.local"
+            GUIDELLM_MAX_SECONDS: "60"
+            GUIDELLM_RATE_TYPE: throughput
+            GUIDELLM_DATA: "prompt_tokens=256,output_tokens=256"
+          image: {{ $guidellmImage }}
+          ES_SERVER: {{ $guidellmES }}
+          ES_INDEX: {{ $guidellmESIndex }}
+
+
+  - name: throughput-text-generation
+    preLoadImages: false
+    qps: 5
+    burst: 5
+    objects:
+      - objectTemplate: manifests/guidellm-job.yml
+        inputVars:
+          parallelism: {{ $guidellmParallelism }}
+          completions: {{ $samples }}
+          env:
+            GUIDELLM_TARGET: "http://llm-d-scale-istio.llm-d-scale.svc.cluster.local"
+            GUIDELLM_MAX_SECONDS: "60"
+            GUIDELLM_RATE_TYPE: throughput
+            GUIDELLM_DATA: "prompt_tokens=512,output_tokens=512"
+          image: {{ $guidellmImage }}
+          ES_SERVER: {{ $guidellmES }}
+          ES_INDEX: {{ $guidellmESIndex }}
+
+  - name: throughput-rag
+    preLoadImages: false
+    qps: 5
+    burst: 5
+    objects:
+      - objectTemplate: manifests/guidellm-job.yml
+        inputVars:
+          parallelism: {{ $guidellmParallelism }}
+          completions: {{ $samples }}
+          env:
+            GUIDELLM_TARGET: "http://llm-d-scale-istio.llm-d-scale.svc.cluster.local"
+            GUIDELLM_MAX_SECONDS: "60"
+            GUIDELLM_RATE_TYPE: throughput
+            GUIDELLM_DATA: "prompt_tokens=8192,output_tokens=512"
+          image: {{ $guidellmImage }}
+          ES_SERVER: {{ $guidellmES }}
+          ES_INDEX: {{ $guidellmESIndex }}

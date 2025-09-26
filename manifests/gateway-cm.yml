@@ -9,8 +9,20 @@ metadata:
 data:
   deployment: |
     spec:
+      replicas: {{ .replicas }}
       template:
         spec:
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                - matchExpressions:
+                  - key: node-role.kubernetes.io/infra
+                    operator: Exists
+          tolerations:
+          - key: "node-role.kubernetes.io/infra"
+            operator: "Exists"
+            effect: "NoSchedule"
           containers:
           - name: istio-proxy
             args:
