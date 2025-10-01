@@ -13,7 +13,7 @@ data:
     max-num-seqs: 10                        # maximum number of inference requests that could be processed at the same time
     enable-kvcache: false                   # Requires HF_TOKEN to pull the model's tokenizer
     max-model-len: {{ .maxModelLen }}
-    fake-metrics: 
-      running-requests: 0
-      waiting-requests: 0
-      kv-cache-usage: 0
+    # fake-metrics:
+    #   running-requests: 0
+    #   waiting-requests: 0
+    #   kv-cache-usage: 0
