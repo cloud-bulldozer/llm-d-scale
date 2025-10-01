@@ -1,0 +1,18 @@
+apiVersion: inference.networking.k8s.io/v1
+kind: InferencePool
+metadata:
+  name: llm-d-scale
+  namespace: llm-d-scale
+  labels:
+    app.kubernetes.io/name: llm-d-scale
+spec:
+  targetPorts:
+   - number: 8000
+  selector:
+    matchLabels:
+      app: llm-d-scale
+  endpointPickerRef:             # The name of the epp service
+    name: llm-d-scale-epp
+    kind: Service
+    port:
+      number: 9002
