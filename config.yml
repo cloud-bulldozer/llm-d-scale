@@ -48,8 +48,8 @@ jobs:
         inputVars:
           model: {{ $model }}
           maxModelLen: 65536                  # Max lenght of the model, including the input and output tokens
-          ttft: 500
-          itl: 10
+          ttft: 0
+          itl: 0
       - objectTemplate: manifests/model-server-sim-deployment.yml
         inputVars:
           replicas: 2
