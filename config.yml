@@ -5,6 +5,8 @@
 {{ $guidellmES :=  .ES_SERVER }}
 {{ $guidellmESIndex := .ES_INDEX }}
 {{ $guidellmParallelism := 1 }}
+{{ $hfToken := env "HF_TOKEN" }}
+{{ $gaie := false }}
 
 metricsEndpoints:
   - metrics: [metrics.yml]
@@ -26,6 +28,7 @@ jobs:
     qps: 5
     burst: 5
     objects:
+{{ if $gaie }}
       - objectTemplate: manifests/gateway.yml
       - objectTemplate: manifests/gateway-cm.yml
         inputVars:
@@ -43,7 +46,13 @@ jobs:
           replicas: 1
       - objectTemplate: manifests/inferencepool.yml
       - objectTemplate: manifests/httproute.yml
+{{ end }}
+{{ if not $gaie }}
+      - objectTemplate: manifests/model-server-svc.yml
+{{ end }}
       - objectTemplate: manifests/hf-token.yml
+        inputVars:
+          hfToken: {{ $hfToken }}
       - objectTemplate: manifests/sim-config.yml
         inputVars:
           model: {{ $model }}
@@ -65,7 +74,11 @@ jobs:
           parallelism: {{ $guidellmParallelism }}
           completions: {{ $samples }}
           env:
+{{ if $gaie }}
             GUIDELLM_TARGET: "http://llm-d-scale-istio.llm-d-scale.svc.cluster.local"
+{{ else }}
+            GUIDELLM_TARGET: "http://llm-d-scale-model.llm-d-scale.svc.cluster.local:8000"
+{{ end }}
             GUIDELLM_MAX_SECONDS: "120"
             GUIDELLM_RATE_TYPE: constant
             GUIDELLM_RATE: "10"
@@ -131,3 +144,44 @@ jobs:
           image: {{ $guidellmImage }}
           ES_SERVER: {{ $guidellmES }}
           ES_INDEX: {{ $guidellmESIndex }}
+
+  - name: poisson-chat
+    preLoadImages: false
+    qps: 5
+    burst: 5
+    objects:
+      - objectTemplate: manifests/guidellm-job.yml
+        inputVars:
+          pause: 10s
+          parallelism: {{ $guidellmParallelism }}
+          completions: {{ $samples }}
+          env:
+            GUIDELLM_TARGET: "http://llm-d-scale-istio.llm-d-scale.svc.cluster.local"
+            GUIDELLM_MAX_SECONDS: "120"
+            GUIDELLM_RATE_TYPE: poisson
+            GUIDELLM_DATA: "prompt_tokens=256,output_tokens=256"
+            GUIDELLM_RATE: "100"
+          image: {{ $guidellmImage }}
+          ES_SERVER: {{ $guidellmES }}
+          ES_INDEX: {{ $guidellmESIndex }}
+
+  - name: poisson-rag
+    preLoadImages: false
+    qps: 5
+    burst: 5
+    objects:
+      - objectTemplate: manifests/guidellm-job.yml
+        inputVars:
+          pause: 10s
+          parallelism: {{ $guidellmParallelism }}
+          completions: {{ $samples }}
+          env:
+            GUIDELLM_TARGET: "http://llm-d-scale-istio.llm-d-scale.svc.cluster.local"
+            GUIDELLM_MAX_SECONDS: "120"
+            GUIDELLM_RATE_TYPE: poisson
+            GUIDELLM_DATA: "prompt_tokens=8192,output_tokens=512"
+            GUIDELLM_RATE: "100"
+          image: {{ $guidellmImage }}
+          ES_SERVER: {{ $guidellmES }}
+          ES_INDEX: {{ $guidellmESIndex }}
+
