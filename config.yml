@@ -2,14 +2,12 @@
 {{ $model := "Qwen/Qwen3-0.6B" }}
 {{ $samples := 3 }}
 {{ $guidellmImage := "quay.io/rsevilla/guidellm-parser:latest" }}
-{{ $guidellmES :=  env "ES_SERVER" }}
-{{ $guidellmESIndex := "guidellm" }}
+{{ $guidellmES :=  .ES_SERVER }}
+{{ $guidellmESIndex := .ES_INDEX }}
 {{ $guidellmParallelism := 1 }}
 
 metricsEndpoints:
-  - endpoint: "{{ env "PROM_URL" }}"
-    token: "{{ env "PROM_TOKEN" }}"
-    metrics: [metrics.yml]
+  - metrics: [metrics.yml]
     step: 15s                           # Using step 15s provides more granularity
     indexer:
       esServers: ["{{ $guidellmES }}"]
@@ -40,7 +38,7 @@ jobs:
       - objectTemplate: manifests/epp-clusterrolebinding.yml        
       - objectTemplate: manifests/epp-deployment.yml
         inputVars:
-          configFile: config/load-aware.yaml
+          configFile: config/default.yaml
           image: ghcr.io/llm-d/llm-d-inference-scheduler:v0.2.1
           replicas: 1
       - objectTemplate: manifests/inferencepool.yml
