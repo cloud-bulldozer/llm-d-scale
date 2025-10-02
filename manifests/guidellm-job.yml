@@ -10,6 +10,15 @@ spec:
   backoffLimit: 0
   template:
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-role.kubernetes.io/infra
+                operator: DoesNotExist
+              - key: node-role.kubernetes.io/worker
+                operator: Exists
       restartPolicy: Never
       containers:
       - name: guidellm

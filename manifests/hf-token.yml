@@ -3,4 +3,4 @@ apiVersion: v1
 metadata:
   name: llm-d-hf-token
 data:
-  HF_TOKEN: {{ env "HF_TOKEN" | b64enc }}
+  HF_TOKEN: {{ .hfToken | b64enc }}

@@ -19,6 +19,8 @@ data:
                 - matchExpressions:
                   - key: node-role.kubernetes.io/infra
                     operator: Exists
+                  - key: node-role.kubernetes.io/worker
+                    operator: DoesNotExist
           tolerations:
           - key: "node-role.kubernetes.io/infra"
             operator: "Exists"

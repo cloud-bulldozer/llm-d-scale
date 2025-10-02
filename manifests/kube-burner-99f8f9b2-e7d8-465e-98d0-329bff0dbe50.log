@@ -1,1 +1,0 @@
-time="2025-09-25 16:22:11" level=fatal msg="Error reading configuration file config.yml: failed to open config file config.yml: open config.yml: no such file or directory" file="kube-burner.go:113"
