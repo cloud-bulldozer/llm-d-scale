@@ -2,11 +2,17 @@
 {{ $model := "Qwen/Qwen3-0.6B" }}
 {{ $samples := 3 }}
 {{ $guidellmImage := "quay.io/rsevilla/guidellm-parser:latest" }}
-{{ $guidellmES :=  .ES_SERVER }}
+{{ $guidellmES := .ES_SERVER }}
 {{ $guidellmESIndex := .ES_INDEX }}
 {{ $guidellmParallelism := 1 }}
 {{ $hfToken := env "HF_TOKEN" }}
 {{ $gaie := false }}
+{{ $guidellmTarget := "" }}
+{{ if $gaie }}
+{{ $guidellmTarget = "http://llm-d-scale-istio.llm-d-scale.svc.cluster.local" }}
+{{ else }}
+{{ $guidellmTarget = "http://llm-d-scale-model.llm-d-scale.svc.cluster.local:8000" }}
+{{ end }}
 
 metricsEndpoints:
   - metrics: [metrics.yml]
@@ -46,8 +52,7 @@ jobs:
           replicas: 1
       - objectTemplate: manifests/inferencepool.yml
       - objectTemplate: manifests/httproute.yml
-{{ end }}
-{{ if not $gaie }}
+{{ else }}
       - objectTemplate: manifests/model-server-svc.yml
 {{ end }}
       - objectTemplate: manifests/hf-token.yml
@@ -74,11 +79,7 @@ jobs:
           parallelism: {{ $guidellmParallelism }}
           completions: {{ $samples }}
           env:
-{{ if $gaie }}
-            GUIDELLM_TARGET: "http://llm-d-scale-istio.llm-d-scale.svc.cluster.local"
-{{ else }}
-            GUIDELLM_TARGET: "http://llm-d-scale-model.llm-d-scale.svc.cluster.local:8000"
-{{ end }}
+            GUIDELLM_TARGET: {{ $guidellmTarget }}
             GUIDELLM_MAX_SECONDS: "120"
             GUIDELLM_RATE_TYPE: constant
             GUIDELLM_RATE: "10"
@@ -98,7 +99,7 @@ jobs:
           parallelism: {{ $guidellmParallelism }}
           completions: {{ $samples }}
           env:
-            GUIDELLM_TARGET: "http://llm-d-scale-istio.llm-d-scale.svc.cluster.local"
+            GUIDELLM_TARGET: {{ $guidellmTarget }}
             GUIDELLM_MAX_SECONDS: "120"
             GUIDELLM_RATE_TYPE: constant
             GUIDELLM_RATE: "10"
@@ -118,7 +119,7 @@ jobs:
           parallelism: {{ $guidellmParallelism }}
           completions: {{ $samples }}
           env:
-            GUIDELLM_TARGET: "http://llm-d-scale-istio.llm-d-scale.svc.cluster.local"
+            GUIDELLM_TARGET: {{ $guidellmTarget }}
             GUIDELLM_MAX_SECONDS: "120"
             GUIDELLM_RATE_TYPE: throughput
             GUIDELLM_DATA: "prompt_tokens=256,output_tokens=256"
@@ -137,7 +138,7 @@ jobs:
           parallelism: {{ $guidellmParallelism }}
           completions: {{ $samples }}
           env:
-            GUIDELLM_TARGET: "http://llm-d-scale-istio.llm-d-scale.svc.cluster.local"
+            GUIDELLM_TARGET: {{ $guidellmTarget }}
             GUIDELLM_MAX_SECONDS: "120"
             GUIDELLM_RATE_TYPE: throughput
             GUIDELLM_DATA: "prompt_tokens=8192,output_tokens=512"
@@ -156,7 +157,7 @@ jobs:
           parallelism: {{ $guidellmParallelism }}
           completions: {{ $samples }}
           env:
-            GUIDELLM_TARGET: "http://llm-d-scale-istio.llm-d-scale.svc.cluster.local"
+            GUIDELLM_TARGET: {{ $guidellmTarget }}
             GUIDELLM_MAX_SECONDS: "120"
             GUIDELLM_RATE_TYPE: poisson
             GUIDELLM_DATA: "prompt_tokens=256,output_tokens=256"
@@ -176,7 +177,7 @@ jobs:
           parallelism: {{ $guidellmParallelism }}
           completions: {{ $samples }}
           env:
-            GUIDELLM_TARGET: "http://llm-d-scale-istio.llm-d-scale.svc.cluster.local"
+            GUIDELLM_TARGET: {{ $guidellmTarget }}
             GUIDELLM_MAX_SECONDS: "120"
             GUIDELLM_RATE_TYPE: poisson
             GUIDELLM_DATA: "prompt_tokens=8192,output_tokens=512"
