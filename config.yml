@@ -6,13 +6,14 @@
 {{ $guidellmESIndex := .ES_INDEX }}
 {{ $guidellmParallelism := 1 }}
 {{ $hfToken := env "HF_TOKEN" }}
-{{ $gaie := false }}
+{{ $gaie := true }}
 {{ $guidellmTarget := "" }}
 {{ if $gaie }}
 {{ $guidellmTarget = "http://llm-d-scale-istio.llm-d-scale.svc.cluster.local" }}
 {{ else }}
 {{ $guidellmTarget = "http://llm-d-scale-model.llm-d-scale.svc.cluster.local:8000" }}
 {{ end }}
+{{ $simulator := true }}
 
 metricsEndpoints:
   - metrics: [metrics.yml]
@@ -64,10 +65,19 @@ jobs:
           maxModelLen: 65536                  # Max lenght of the model, including the input and output tokens
           ttft: 0
           itl: 0
+{{ if $simulator }}
       - objectTemplate: manifests/model-server-sim-deployment.yml
         inputVars:
           replicas: 2
-      
+{{ else }}
+      - objectTemplate: manifests/model-server-vllm-deployment.yml
+        inputVars:
+          replicas: 2
+          image: quay.io/rsevilla/vllm:audio
+          flags: serve openai/whisper-tiny
+          # image: docker.io/vllm/vllm-openai:v0.11.0
+{{ end }}
+
   - name: steady-chat
     preLoadImages: false
     qps: 5
@@ -80,7 +90,7 @@ jobs:
           completions: {{ $samples }}
           env:
             GUIDELLM_TARGET: {{ $guidellmTarget }}
-            GUIDELLM_MAX_SECONDS: "120"
+            GUIDELLM_MAX_SECONDS: "60"
             GUIDELLM_RATE_TYPE: constant
             GUIDELLM_RATE: "10"
             GUIDELLM_DATA: "prompt_tokens=256,output_tokens=256"
@@ -95,12 +105,12 @@ jobs:
     objects:
       - objectTemplate: manifests/guidellm-job.yml
         inputVars:
-          pause: 10s
+          pause: 5s
           parallelism: {{ $guidellmParallelism }}
           completions: {{ $samples }}
           env:
             GUIDELLM_TARGET: {{ $guidellmTarget }}
-            GUIDELLM_MAX_SECONDS: "120"
+            GUIDELLM_MAX_SECONDS: "60"
             GUIDELLM_RATE_TYPE: constant
             GUIDELLM_RATE: "10"
             GUIDELLM_DATA: "prompt_tokens=8192,output_tokens=512"
@@ -115,33 +125,15 @@ jobs:
     objects:
       - objectTemplate: manifests/guidellm-job.yml
         inputVars:
-          pause: 10s
+          pause: 5s
           parallelism: {{ $guidellmParallelism }}
           completions: {{ $samples }}
           env:
             GUIDELLM_TARGET: {{ $guidellmTarget }}
-            GUIDELLM_MAX_SECONDS: "120"
+            GUIDELLM_MAX_SECONDS: "30"
             GUIDELLM_RATE_TYPE: throughput
             GUIDELLM_DATA: "prompt_tokens=256,output_tokens=256"
-          image: {{ $guidellmImage }}
-          ES_SERVER: {{ $guidellmES }}
-          ES_INDEX: {{ $guidellmESIndex }}
-
-  - name: throughput-rag
-    preLoadImages: false
-    qps: 5
-    burst: 5
-    objects:
-      - objectTemplate: manifests/guidellm-job.yml
-        inputVars:
-          pause: 10s
-          parallelism: {{ $guidellmParallelism }}
-          completions: {{ $samples }}
-          env:
-            GUIDELLM_TARGET: {{ $guidellmTarget }}
-            GUIDELLM_MAX_SECONDS: "120"
-            GUIDELLM_RATE_TYPE: throughput
-            GUIDELLM_DATA: "prompt_tokens=8192,output_tokens=512"
+            GUIDELLM__MAX_CONCURRENCY: 20
           image: {{ $guidellmImage }}
           ES_SERVER: {{ $guidellmES }}
           ES_INDEX: {{ $guidellmESIndex }}
@@ -153,12 +145,12 @@ jobs:
     objects:
       - objectTemplate: manifests/guidellm-job.yml
         inputVars:
-          pause: 10s
+          pause: 5s
           parallelism: {{ $guidellmParallelism }}
           completions: {{ $samples }}
           env:
             GUIDELLM_TARGET: {{ $guidellmTarget }}
-            GUIDELLM_MAX_SECONDS: "120"
+            GUIDELLM_MAX_SECONDS: "60"
             GUIDELLM_RATE_TYPE: poisson
             GUIDELLM_DATA: "prompt_tokens=256,output_tokens=256"
             GUIDELLM_RATE: "100"
@@ -173,12 +165,12 @@ jobs:
     objects:
       - objectTemplate: manifests/guidellm-job.yml
         inputVars:
-          pause: 10s
+          pause: 5s
           parallelism: {{ $guidellmParallelism }}
           completions: {{ $samples }}
           env:
             GUIDELLM_TARGET: {{ $guidellmTarget }}
-            GUIDELLM_MAX_SECONDS: "120"
+            GUIDELLM_MAX_SECONDS: "60"
             GUIDELLM_RATE_TYPE: poisson
             GUIDELLM_DATA: "prompt_tokens=8192,output_tokens=512"
             GUIDELLM_RATE: "100"
