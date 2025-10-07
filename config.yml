@@ -78,7 +78,7 @@ jobs:
           # image: docker.io/vllm/vllm-openai:v0.11.0
 {{ end }}
 
-  - name: steady-chat
+  - name: steady-chat-10
     preLoadImages: false
     qps: 5
     burst: 5
@@ -98,7 +98,47 @@ jobs:
           ES_SERVER: {{ $guidellmES }}
           ES_INDEX: {{ $guidellmESIndex }}
 
-  - name: steady-rag
+  - name: steady-chat-20
+    preLoadImages: false
+    qps: 5
+    burst: 5
+    objects:
+      - objectTemplate: manifests/guidellm-job.yml
+        inputVars:
+          pause: 30s
+          parallelism: {{ $guidellmParallelism }}
+          completions: {{ $samples }}
+          env:
+            GUIDELLM_TARGET: {{ $guidellmTarget }}
+            GUIDELLM_MAX_SECONDS: "60"
+            GUIDELLM_RATE_TYPE: constant
+            GUIDELLM_RATE: "20"
+            GUIDELLM_DATA: "prompt_tokens=256,output_tokens=256"
+          image: {{ $guidellmImage }}
+          ES_SERVER: {{ $guidellmES }}
+          ES_INDEX: {{ $guidellmESIndex }}
+
+  - name: steady-chat-40
+    preLoadImages: false
+    qps: 5
+    burst: 5
+    objects:
+      - objectTemplate: manifests/guidellm-job.yml
+        inputVars:
+          pause: 30s
+          parallelism: {{ $guidellmParallelism }}
+          completions: {{ $samples }}
+          env:
+            GUIDELLM_TARGET: {{ $guidellmTarget }}
+            GUIDELLM_MAX_SECONDS: "60"
+            GUIDELLM_RATE_TYPE: constant
+            GUIDELLM_RATE: "40"
+            GUIDELLM_DATA: "prompt_tokens=256,output_tokens=256"
+          image: {{ $guidellmImage }}
+          ES_SERVER: {{ $guidellmES }}
+          ES_INDEX: {{ $guidellmESIndex }}
+
+  - name: steady-rag-10
     preLoadImages: false
     qps: 5
     burst: 5
@@ -113,6 +153,46 @@ jobs:
             GUIDELLM_MAX_SECONDS: "60"
             GUIDELLM_RATE_TYPE: constant
             GUIDELLM_RATE: "10"
+            GUIDELLM_DATA: "prompt_tokens=8192,output_tokens=512"
+          image: {{ $guidellmImage }}
+          ES_SERVER: {{ $guidellmES }}
+          ES_INDEX: {{ $guidellmESIndex }}
+
+  - name: steady-rag-20
+    preLoadImages: false
+    qps: 5
+    burst: 5
+    objects:
+      - objectTemplate: manifests/guidellm-job.yml
+        inputVars:
+          pause: 5s
+          parallelism: {{ $guidellmParallelism }}
+          completions: {{ $samples }}
+          env:
+            GUIDELLM_TARGET: {{ $guidellmTarget }}
+            GUIDELLM_MAX_SECONDS: "60"
+            GUIDELLM_RATE_TYPE: constant
+            GUIDELLM_RATE: "20"
+            GUIDELLM_DATA: "prompt_tokens=8192,output_tokens=512"
+          image: {{ $guidellmImage }}
+          ES_SERVER: {{ $guidellmES }}
+          ES_INDEX: {{ $guidellmESIndex }}
+
+  - name: steady-rag-40
+    preLoadImages: false
+    qps: 5
+    burst: 5
+    objects:
+      - objectTemplate: manifests/guidellm-job.yml
+        inputVars:
+          pause: 5s
+          parallelism: {{ $guidellmParallelism }}
+          completions: {{ $samples }}
+          env:
+            GUIDELLM_TARGET: {{ $guidellmTarget }}
+            GUIDELLM_MAX_SECONDS: "60"
+            GUIDELLM_RATE_TYPE: constant
+            GUIDELLM_RATE: "40"
             GUIDELLM_DATA: "prompt_tokens=8192,output_tokens=512"
           image: {{ $guidellmImage }}
           ES_SERVER: {{ $guidellmES }}
