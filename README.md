@@ -31,12 +31,34 @@ The testing framework deploys and tests the following components:
 ### Cluster Requirements
 
 Nodes with NVIDIA GPUs are required for real vLLM workloads:
-  - GPU support (NVIDIA GPU Operator installed) for real vLLM workloads
-  - Node Feature Discovery (NFD) for GPU node labeling
-  - NVIDIA gpu operator
 
-When using the GAIE mode:
-- OSSM v3 with enabled support for Gateway API inference extension
+Node Feature Discovery (NFD) 
+
+```shell
+$ oc apply -f infra-assets/nfd.yaml
+$ oc apply -f infra-assets/nfd-instance.yaml
+```
+- NVIDIA gpu operator
+
+```shell
+$ oc apply -f infra-assets/nvidia-gpu-operator.yaml
+$ oc apply -f infra-assets/clusterpolicy-gpu-cluster-policy.yaml
+```
+
+- When using the GAIE mode:
+
+OSSM 3.1 with enabled support for Gateway API inference extension
+
+It can be deployed with:
+
+```shell
+$ oc apply -f infra-assets/istio.yml
+```
+
+Node labels:
+
+- At least one `gpu` node. Labeled with `node-role.kubernetes.io/gpu=`
+- At least one `worker` node. Labebeled with `node-role.kubernetes.io/worker=`
 
 ### Environment Variables
 
