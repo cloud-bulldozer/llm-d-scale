@@ -27,7 +27,7 @@ spec:
         effect: NoSchedule
       containers:
         - name: vllm
-          image: ghcr.io/llm-d/llm-d-inference-sim:v0.5.1
+          image: ghcr.io/llm-d/llm-d-inference-sim:v0.6.1
           args:
             - --config
             - config/config.yml
@@ -58,4 +58,3 @@ spec:
         - name: config
           configMap:
             name: sim-config
-    

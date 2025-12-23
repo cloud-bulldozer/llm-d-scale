@@ -34,25 +34,20 @@ spec:
         image: {{ .image }}
         imagePullPolicy: IfNotPresent
         args:
-        - -poolName
+        - --pool-name
         - llm-d-scale
-        - -poolNamespace
+        - --pool-namespace
         - llm-d-scale
         - --v
         - "4"
-        - --grpcPort
+        - --grpc-port
         - "9002"
-        - -grpcHealthPort
+        - --grpc-health-port
         - "9003"
-        - -metricsPort
+        - --metrics-port
         - "9090"
-        - -configFile
+        - --config-file
         - "{{ .configFile }}"
-        # https://pkg.go.dev/flag#hdr-Command_line_flag_syntax; space is only for non-bool flags
-        - "--enablePprof=true"
-        - "--modelServerMetricsPath=/metrics"
-        - "--modelServerMetricsScheme=http"
-        - "--modelServerMetricsHttpsInsecureSkipVerify=true"
         ports:
         - name: grpc
           containerPort: 9002

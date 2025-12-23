@@ -45,13 +45,13 @@ jobs:
       - objectTemplate: manifests/epp-config.yml
       - objectTemplate: manifests/epp-sa.yml
       - objectTemplate: manifests/epp-clusterrole.yml
-      - objectTemplate: manifests/epp-clusterrolebinding.yml        
+      - objectTemplate: manifests/epp-clusterrolebinding.yml
       - objectTemplate: manifests/epp-deployment.yml
         inputVars:
           configFile: config/default.yaml
-          image: ghcr.io/llm-d/llm-d-inference-scheduler:v0.2.1
+          image: ghcr.io/llm-d/llm-d-inference-scheduler:v0.4.0
           replicas: 1
-      - objectTemplate: manifests/inferencepool.yml
+      - objectTemplate: manifests/inferencepool-stable.yml
       - objectTemplate: manifests/httproute.yml
 {{ else }}
       - objectTemplate: manifests/model-server-svc.yml

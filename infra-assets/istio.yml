@@ -19,7 +19,7 @@ spec:
   updateStrategy:
     inactiveRevisionDeletionGracePeriodSeconds: 30
     type: InPlace
-  version: v1.26.3
+  version: v1.27.3
 ---
 kind: IstioCNI
 apiVersion: sailoperator.io/v1
@@ -27,5 +27,5 @@ metadata:
   name: default
 spec:
   namespace: istio-cni
-  version: v1.26.3
+  version: v1.27.3
 ---

@@ -9,7 +9,7 @@ spec:
     name: llm-d-scale
   rules:
     - backendRefs:
-      - group: inference.networking.x-k8s.io
+      - group: inference.networking.k8s.io
         kind: InferencePool
         name: llm-d-scale
         port: 8000
