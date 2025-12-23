@@ -70,6 +70,7 @@ jobs:
         inputVars:
           replicas: 2
 {{ else }}
+      - objectTemplate: manifests/model-server-vllm-sa-rbac.yml
       - objectTemplate: manifests/model-server-vllm-deployment.yml
         inputVars:
           replicas: 2

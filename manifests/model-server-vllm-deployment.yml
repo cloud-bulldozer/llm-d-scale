@@ -21,6 +21,7 @@ spec:
                 operator: DoesNotExist
               - key: node-role.kubernetes.io/gpu
                 operator: Exists
+      serviceAccountName: llm-d-scale-vllm
       tolerations:
       - key: nvidia.com/gpu
         operator: Exists
