@@ -231,7 +231,6 @@ A document with:
 - The first element is the aggregate summary metrics
 - Subsequent elements are timeseries entries for individual requests
 
-```
 
 ## Project Structure
 
